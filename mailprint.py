@@ -52,7 +52,7 @@ class FetchEmail():
                     fp = open(att_path, 'wb')
                     fp.write(att_data)
                     fp.close()
-                if ext != '.pdf':
+                if ext not in ['.pdf', '.ps']:
                     try:
                         outputfilename = os.path.join(download_folder, base + '.pdf')
                         fmt = None
