@@ -73,15 +73,14 @@ class FetchEmail():
         Retrieve unread messages
         """
         emails = []
-        (result, messages) = self.connection.search(None, 'UnSeen')
+        (result, data) = self.connection.search(None, 'UnSeen')
         if result == "OK":
-            for message in messages[0].split():
-                try: 
+            for message in data[0].split():
+                try:
                     ret, data = self.connection.fetch(message,'(RFC822)')
                 except:
-                    print("No new emails to read.")
-                    self.close_connection()
-                    exit()
+                    print("Can't fetch message {}".format(message))
+                    continue
 
                 msg = email.message_from_bytes(data[0][1])
                 if isinstance(msg, str) == False:
