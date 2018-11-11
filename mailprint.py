@@ -37,9 +37,12 @@ class FetchEmail():
             if part.get_content_maintype() == 'multipart':
                 continue
             if part.get('Content-Disposition') is None:
-                continue
+                if part.get_content_type() != 'application/octet-stream':
+                    continue
 
             filename = part.get_filename()
+            if filename is None:
+                continue
             base, ext = os.path.splitext(filename)
             ext = ext.lower()
             if ext not in ['.asc', '.sig', '.gpg']:
