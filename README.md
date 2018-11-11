@@ -6,7 +6,7 @@ You can forward any mails with attachments to this account to have them printed 
 
 ## Installation
 
-This package requires pandoc and pypandoc. The more recent the version of pandoc the better.
+This package requires libreoffice, pandoc and pypandoc. The more recent the version of pandoc the better.
 
 Copy credentials.py.template to credentials.py and modify to your needs. Then run mailprint.py in a cron job.
 

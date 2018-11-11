@@ -6,6 +6,36 @@ import os
 import pypandoc
 import hashlib
 import subprocess
+import time
+import glob
+
+LIBREOFFICE_EXT = [".ods", ".ots", ".fods", ".uos", ".xlsx", ".xml", ".xls", ".xlt", ".dif", ".dbf", ".html", ".slk", ".csv", ".xlsx", ".xlsm", ".odt", ".ott", ".fodt", ".uot", ".docx", ".xml", ".doc", ".dot", ".html", ".rtf", ".docx", ".odf", "mml", "odp", "otp", "odg", "fodp", "uop", "pptx", "ppsx", "potm", "ppt", "pps", "pot", "pptx", "odg", "otg", "fodg", "odm,", "oth,", "odb,", "oxt,", "otf"]
+
+def subprocess_execute(command, time_out=60):
+    """executing the command with a watchdog"""
+
+    # launching the command
+    c = subprocess.Popen(command)
+
+    # now waiting for the command to complete
+    t = 0
+    while t < time_out and c.poll() is None:
+        time.sleep(1)  # (comment 1)
+        t += 1
+
+    # there are two possibilities for the while to have stopped:
+    if c.poll() is None:
+        # in the case the process did not complete, we kill it
+        c.terminate()
+        # and fill the return code with some error value
+        returncode = -1  # (comment 2)
+
+    else:                 
+        # in the case the process completed normally
+        returncode = c.poll()
+
+    return returncode   
+
 
 class FetchEmail():
 
@@ -57,19 +87,43 @@ class FetchEmail():
                     fp.write(att_data)
                     fp.close()
                 if ext not in ['.pdf', '.ps']:
+                    outputfilename = os.path.join(download_folder, base + '.pdf')
                     try:
-                        outputfilename = os.path.join(download_folder, base + '.pdf')
-                        fmt = None
-                        if ext == ".txt":
-                            fmt = 'md'
                         print("Converting file '{}{}' to PDF".format(base, ext))
-                        pypandoc.convert_file(att_path, 'pdf', format=fmt, outputfile=outputfilename)
+                        if ext in LIBREOFFICE_EXT:
+                            print("Converting with LibreOffice")
+                            timeout = 10
+                            ret = subprocess_execute(["/usr/bin/libreoffice", "--headless", "--convert-to", "pdf", "--outdir", download_folder, att_path], time_out=timeout)
+                            if ret == -1:
+                                raise RuntimeError("Failed to convert with libreoffice. Timeout after {} seonds".format(timeout))
+                            if ret != 0:
+                                raise RuntimeError("Failed to convert with libreoffice. Return code: {}".format(ret))
+                            if not os.path.exists(outputfilename):
+                                raise RuntimeError("Failed to convert with libreoffice. Unknown Error. PDF file was not created.")
+                        else:
+                            print("Converting with pandoc")
+                            fmt = None
+                            if ext == ".txt":
+                                fmt = 'md'
+                            pypandoc.convert_file(att_path, 'pdf', format=fmt, outputfile=outputfilename)
                         print("Successfully created '{}'. Removing source file.".format(outputfilename))
                         os.remove(att_path)
                         att_path = outputfilename
                     except RuntimeError as e:
                         print("Error converting to PDF. Removing file. Error: {}".format(e))
-                        os.path.rm(att_path)
+                        try:
+                            os.remove(att_path)
+                        except OSError:
+                            pass
+                        try:
+                            os.remove(outputfilename)
+                        except OSError:
+                            pass
+                        try:
+                            for f in glob.glob(download_folder + "*.tmp"):
+                                os.remove(f)
+                        except OSError:
+                            pass
                         att_path = None
             if att_path is not None:
                 att_paths.append(att_path)
