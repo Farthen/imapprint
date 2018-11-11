@@ -102,7 +102,7 @@ class FetchEmail():
         return email.utils.parseaddr(email_address)
 
 def print_file(filename):
-    subprocess.run(["/usr/bin/lp", "-d", PRINTERNAME, filename])
+    subprocess.call(["/usr/bin/lp", "-d", PRINTERNAME, filename])
     os.remove(filename)
 
 if __name__ == "__main__":
