@@ -46,6 +46,7 @@ class FetchEmail():
             base, ext = os.path.splitext(filename)
             ext = ext.lower()
             if ext not in ['.asc', '.sig', '.gpg']:
+                print("Downloading attachment '{}'".format(filename))
                 att_data = part.get_payload(decode=True)
                 shasum = hashlib.sha256(att_data).hexdigest()
                 base = base + '-' + shasum[:10]
@@ -61,10 +62,13 @@ class FetchEmail():
                         fmt = None
                         if ext == ".txt":
                             fmt = 'md'
+                        print("Converting file '{}{}' to PDF".format(base, ext))
                         pypandoc.convert_file(att_path, 'pdf', format=fmt, outputfile=outputfilename)
+                        print("Successfully created '{}'. Removing source file.".format(outputfilename))
                         os.remove(att_path)
                         att_path = outputfilename
-                    except RuntimeError:
+                    except RuntimeError as e:
+                        print("Error converting to PDF. Removing file. Error: {}".format(e))
                         os.path.rm(att_path)
                         att_path = None
             if att_path is not None:
@@ -104,6 +108,7 @@ class FetchEmail():
         return email.utils.parseaddr(email_address)
 
 def print_file(filename):
+    print("Printing file: '{}'".format(filename))
     subprocess.call(["/usr/bin/lp", "-d", PRINTERNAME, filename])
     os.remove(filename)
 
