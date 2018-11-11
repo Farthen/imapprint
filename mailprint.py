@@ -119,11 +119,11 @@ class FetchEmail():
                             os.remove(outputfilename)
                         except OSError:
                             pass
-                        try:
-                            for f in glob.glob(download_folder + "*.tmp"):
+                        for f in glob.glob(download_folder + "*.tmp"):
+                            try:
                                 os.remove(f)
-                        except OSError:
-                            pass
+                            except OSError:
+                                pass
                         att_path = None
             if att_path is not None:
                 att_paths.append(att_path)
