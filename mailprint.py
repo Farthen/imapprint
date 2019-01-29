@@ -10,6 +10,7 @@ import time
 import glob
 
 LIBREOFFICE_EXT = [".ods", ".ots", ".fods", ".uos", ".xlsx", ".xml", ".xls", ".xlt", ".dif", ".dbf", ".html", ".slk", ".csv", ".xlsx", ".xlsm", ".odt", ".ott", ".fodt", ".uot", ".docx", ".xml", ".doc", ".dot", ".html", ".rtf", ".docx", ".odf", "mml", "odp", "otp", "odg", "fodp", "uop", "pptx", "ppsx", "potm", "ppt", "pps", "pot", "pptx", "odg", "otg", "fodg", "odm,", "oth,", "odb,", "oxt,", "otf"]
+IMAGEMAGICK_EXT = [".jpg", ".jpeg", ".png", ".gif", ".tiff", ".bmp"]
 
 def subprocess_execute(command, time_out=60):
     """executing the command with a watchdog"""
@@ -36,6 +37,8 @@ def subprocess_execute(command, time_out=60):
 
     return returncode   
 
+class ConnectionError(Exception):
+    pass
 
 class FetchEmail():
 
@@ -43,9 +46,12 @@ class FetchEmail():
     error = None
 
     def __init__(self, mail_server, username, password):
-        self.connection = imaplib.IMAP4_SSL(mail_server)
-        self.connection.login(username, password)
-        self.connection.select(readonly=False) # so we can mark mails as read
+        try:
+            self.connection = imaplib.IMAP4_SSL(mail_server)
+            self.connection.login(username, password)
+            self.connection.select(readonly=False) # so we can mark mails as read
+        except OSError:
+            raise ConnectionError()
 
     def close_connection(self):
         """
@@ -100,6 +106,16 @@ class FetchEmail():
                                 raise RuntimeError("Failed to convert with libreoffice. Return code: {}".format(ret))
                             if not os.path.exists(outputfilename):
                                 raise RuntimeError("Failed to convert with libreoffice. Unknown Error. PDF file was not created.")
+                        elif ext in IMAGEMAGICK_EXT:
+                            print("Converting with imagemagick")
+                            timeout = 10
+                            ret = subprocess_execute(["/usr/bin/convert", att_path, outputfilename], time_out=timeout)
+                            if ret == -1:
+                                raise RuntimeError("Failed to convert with imagemagick. Timeout after {} seonds".format(timeout))
+                            if ret != 0:
+                                raise RuntimeError("Failed to convert with imagemagick. Return code: {}".format(ret))
+                            if not os.path.exists(outputfilename):
+                                raise RuntimeError("Failed to convert with imagemagick. Unknown Error. PDF file was not created.")
                         else:
                             print("Converting with pandoc")
                             fmt = None
@@ -163,7 +179,7 @@ class FetchEmail():
 
 def print_file(filename):
     print("Printing file: '{}'".format(filename))
-    subprocess.call(["/usr/bin/lp", "-d", PRINTERNAME, filename])
+    subprocess.call(["/usr/bin/lp", "-o", "fit-to-page", "-o", "media=A4", "-d", PRINTERNAME, filename])
     os.remove(filename)
 
 if __name__ == "__main__":
