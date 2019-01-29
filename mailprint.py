@@ -98,7 +98,7 @@ class FetchEmail():
                         print("Converting file '{}{}' to PDF".format(base, ext))
                         if ext in LIBREOFFICE_EXT:
                             print("Converting with LibreOffice")
-                            timeout = 10
+                            timeout = 25
                             ret = subprocess_execute(["/usr/bin/libreoffice", "--headless", "--convert-to", "pdf", "--outdir", download_folder, att_path], time_out=timeout)
                             if ret == -1:
                                 raise RuntimeError("Failed to convert with libreoffice. Timeout after {} seonds".format(timeout))
@@ -108,7 +108,7 @@ class FetchEmail():
                                 raise RuntimeError("Failed to convert with libreoffice. Unknown Error. PDF file was not created.")
                         elif ext in IMAGEMAGICK_EXT:
                             print("Converting with imagemagick")
-                            timeout = 10
+                            timeout = 25
                             ret = subprocess_execute(["/usr/bin/convert", att_path, outputfilename], time_out=timeout)
                             if ret == -1:
                                 raise RuntimeError("Failed to convert with imagemagick. Timeout after {} seonds".format(timeout))
