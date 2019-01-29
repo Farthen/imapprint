@@ -9,6 +9,8 @@ import subprocess
 import time
 import glob
 
+os.environ.setdefault('PYPANDOC_PANDOC', '/usr/local/bin/pandoc')
+
 LIBREOFFICE_EXT = [".ods", ".ots", ".fods", ".uos", ".xlsx", ".xml", ".xls", ".xlt", ".dif", ".dbf", ".html", ".slk", ".csv", ".xlsx", ".xlsm", ".odt", ".ott", ".fodt", ".uot", ".docx", ".xml", ".doc", ".dot", ".html", ".rtf", ".docx", ".odf", "mml", "odp", "otp", "odg", "fodp", "uop", "pptx", "ppsx", "potm", "ppt", "pps", "pot", "pptx", "odg", "otg", "fodg", "odm,", "oth,", "odb,", "oxt,", "otf"]
 IMAGEMAGICK_EXT = [".jpg", ".jpeg", ".png", ".gif", ".tiff", ".bmp"]
 
